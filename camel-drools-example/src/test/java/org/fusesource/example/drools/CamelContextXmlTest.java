@@ -71,13 +71,17 @@ public class CamelContextXmlTest extends CamelSpringTestSupport {
         assertNotNull(identifiers);
         assertTrue(identifiers.size() >= 1);
 
-        for (String identifier : identifiers) {
-            final Object value = response.getValue(identifier);
-            assertNotNull(value);
-            assertIsInstanceOf(Person.class, value);
-            assertFalse(((Person) value).isCanDrink());
-            System.out.println(identifier + " = " + value);
-        }
+        boolean personFound = false;
+		for (String identifier : identifiers) {
+			final Object value = response.getValue(identifier);
+			assertNotNull(value);
+			if (value instanceof Person) {
+				assertFalse(((Person) value).isCanDrink());
+				personFound = true;
+			}
+			System.out.println(identifier + " = " + value);
+		}
+		assertTrue(personFound);
 
         // Test for alternative result
 
@@ -93,13 +97,17 @@ public class CamelContextXmlTest extends CamelSpringTestSupport {
         assertNotNull(identifiers);
         assertTrue(identifiers.size() >= 1);
 
-        for (String identifier : identifiers) {
-            final Object value = response.getValue(identifier);
-            assertNotNull(value);
-            assertIsInstanceOf(Person.class, value);
-            assertTrue(((Person) value).isCanDrink());
-            System.out.println(identifier + " = " + value);
-        }
+        personFound = false;
+		for (String identifier : identifiers) {
+			final Object value = response.getValue(identifier);
+			assertNotNull(value);
+			if (value instanceof Person) {
+				assertTrue(((Person) value).isCanDrink());
+				personFound = true;
+			}
+			System.out.println(identifier + " = " + value);
+		}
+		assertTrue(personFound);
     }
 
     @Override

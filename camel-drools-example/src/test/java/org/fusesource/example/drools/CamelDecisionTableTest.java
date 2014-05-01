@@ -14,7 +14,6 @@
  *    limitations under the License.
  */
 
-
 package org.fusesource.example.drools;
 
 import java.util.Collection;
@@ -28,101 +27,113 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class CamelDecisionTableTest extends CamelSpringTestSupport {
 
-    // templates to send to input endpoints
-    @Produce(uri = "direct://ruleOnBodyDT")
-    protected ProducerTemplate ruleOnBodyEndpoint;
-    @Produce(uri = "direct://ruleOnCommandDT")
-    protected ProducerTemplate ruleOnCommandEndpoint;
+	// templates to send to input endpoints
+	@Produce(uri = "direct://ruleOnBodyDT")
+	protected ProducerTemplate ruleOnBodyEndpoint;
+	@Produce(uri = "direct://ruleOnCommandDT")
+	protected ProducerTemplate ruleOnCommandEndpoint;
 
-    @Test
-    public void testRuleOnBody() throws Exception {
-        Person person = new Person();
-        person.setName("Young Scott");
-        person.setAge(18);
+	@Test
+	public void testRuleOnBody() throws Exception {
+		Person person = new Person();
+		person.setName("Young Scott");
+		person.setAge(18);
 
-        Cheese cheese = new Cheese();
-        cheese.setPrice(10);
-        cheese.setType("Stilton");
+		Cheese cheese = new Cheese();
+		cheese.setPrice(10);
+		cheese.setType("Stilton");
 
-        // Add cheese
-        ruleOnBodyEndpoint.requestBody(cheese, Cheese.class);
+		// Add cheese
+		ruleOnBodyEndpoint.requestBody(cheese, Cheese.class);
 
-        // Check If Person can Drink
-        Person response = ruleOnBodyEndpoint.requestBody(person, Person.class);
+		// Check If Person can Drink
+		Person response = ruleOnBodyEndpoint.requestBody(person, Person.class);
 
-        assertNotNull(response);
-        assertFalse(person.isCanDrink());
+		assertNotNull(response);
+		assertFalse(person.isCanDrink());
 
-        // Test for alternative result
-        person.setName("Scott");
-        person.setAge(21);
+		// Test for alternative result
+		person.setName("Scott");
+		person.setAge(21);
 
-        response = ruleOnBodyEndpoint.requestBody(person, Person.class);
+		response = ruleOnBodyEndpoint.requestBody(person, Person.class);
 
-        assertNotNull(response);
-        assertTrue(person.isCanDrink());
-    }
+		assertNotNull(response);
+		assertTrue(person.isCanDrink());
+	}
 
-    @Test
-    // TODO drools-camel component should be improved to allow to set Global value on the session
-    public void testRuleOnCommand() throws Exception {
-        Person person = new Person();
-        person.setName("Young Scott");
-        person.setAge(18);
+	@Test
+	// TODO drools-camel component should be improved to allow to set Global
+	// value on the session
+	public void testRuleOnCommand() throws Exception {
+		Person person = new Person();
+		person.setName("Young Scott");
+		person.setAge(18);
 
-        Cheese cheese = new Cheese();
-        cheese.setPrice(10);
-        cheese.setType("Stilton");
+		Cheese cheese = new Cheese();
+		cheese.setPrice(10);
+		cheese.setType("Stilton");
 
-        // Add a Person
-        ruleOnBodyEndpoint.requestBody(cheese, Cheese.class);
+		// Add a Person
+		ruleOnBodyEndpoint.requestBody(person, Person.class);
 
-        // Add cheese
-        ruleOnBodyEndpoint.requestBody(cheese, Cheese.class);
+		// Add cheese
+		ruleOnBodyEndpoint.requestBody(cheese, Cheese.class);
 
-        // Remark : passing person here is not required
-        ExecutionResultImpl response = ruleOnCommandEndpoint.requestBody(person, ExecutionResultImpl.class);
+		// Remark : passing person here is not required
+		ExecutionResultImpl response = ruleOnCommandEndpoint.requestBody(
+				person, ExecutionResultImpl.class);
 
-        assertNotNull(response);
+		assertNotNull(response);
 
-        // Expecting single result value of type Person
-        Collection<String> identifiers = response.getIdentifiers();
-        assertNotNull(identifiers);
-        assertTrue(identifiers.size() >= 1);
+		// Expecting single result value of type Person
+		Collection<String> identifiers = response.getIdentifiers();
+		assertNotNull(identifiers);
+		assertTrue(identifiers.size() >= 1);
 
-        for (String identifier : identifiers) {
-            final Object value = response.getValue(identifier);
-            assertNotNull(value);
-            assertIsInstanceOf(Person.class, value);
-            assertFalse(((Person) value).isCanDrink());
-            System.out.println(identifier + " = " + value);
-        }
+		boolean personFound = false;
+		for (String identifier : identifiers) {
+			final Object value = response.getValue(identifier);
+			assertNotNull(value);
+			if (value instanceof Person) {
+				assertFalse(((Person) value).isCanDrink());
+				personFound = true;
+			}
+			System.out.println(identifier + " = " + value);
+		}
+		assertTrue(personFound);
 
-        // Test for alternative result
+		// Test for alternative result
 
-        person.setName("Scott");
-        person.setAge(21);
+		person.setName("Scott");
+		person.setAge(21);
 
-        response = ruleOnCommandEndpoint.requestBody(person, ExecutionResultImpl.class);
+		response = ruleOnCommandEndpoint.requestBody(person,
+				ExecutionResultImpl.class);
 
-        assertNotNull(response);
+		assertNotNull(response);
 
-        // Expecting single result value of type Person
-        identifiers = response.getIdentifiers();
-        assertNotNull(identifiers);
-        assertTrue(identifiers.size() >= 1);
+		// Expecting single result value of type Person
+		identifiers = response.getIdentifiers();
+		assertNotNull(identifiers);
+		assertTrue(identifiers.size() >= 1);
 
-        for (String identifier : identifiers) {
-            final Object value = response.getValue(identifier);
-            assertNotNull(value);
-            assertIsInstanceOf(Person.class, value);
-            assertTrue(((Person) value).isCanDrink());
-            System.out.println(identifier + " = " + value);
-        }
-    }
+		personFound = false;
+		for (String identifier : identifiers) {
+			final Object value = response.getValue(identifier);
+			assertNotNull(value);
+			if (value instanceof Person) {
+				assertTrue(((Person) value).isCanDrink());
+				personFound = true;
+			}
+			System.out.println(identifier + " = " + value);
+		}
+		assertTrue(personFound);
+	}
 
-    @Override
-    protected ClassPathXmlApplicationContext createApplicationContext() {
-        return new ClassPathXmlApplicationContext("META-INF/spring/camel-context-decision-table.xml");
-    }
+	@Override
+	protected ClassPathXmlApplicationContext createApplicationContext() {
+		return new ClassPathXmlApplicationContext(
+				"META-INF/spring/camel-context-decision-table.xml");
+	}
 }

@@ -39,6 +39,7 @@ public class DroolsCommandHelper {
         BatchExecutionCommandImpl command = new BatchExecutionCommandImpl();
         final List<GenericCommand<?>> commands = command.getCommands();
         commands.add(new InsertObjectCommand(body, "obj1"));
+        commands.add(new InsertObjectCommand(new Cheese("Cheddar", 1), "cheese"));
         commands.add(new FireAllRulesCommand());
 
         in.setBody(command);
